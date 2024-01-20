@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:lights_on_height_ecommerce_app/app/controllers/store_controller.dart';
 import 'package:lights_on_height_ecommerce_app/app/models/products_model.dart';
+import 'package:lights_on_height_ecommerce_app/app/views/product_view.dart';
+import 'package:shimmer/shimmer.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -12,13 +14,14 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  final TextEditingController searchTextController = TextEditingController();
+  final TextEditingController _searchTextController = TextEditingController();
   final dio = Dio();
   final StoreController _controller = StoreController();
   final ScrollController categoriesScrollController = ScrollController();
 
   bool isLoadingProducts = false;
 
+  List<ProductsModel> _searchProductsResultList = [];
   List<ProductsModel> _productsResponseList = [];
   List<ProductsModel> get productsResponseList => _productsResponseList;
 
@@ -59,12 +62,154 @@ class _SearchViewState extends State<SearchView> {
     }
   }
 
+  onSearchTextChanged(String text) async {
+    _searchProductsResultList.clear();
+    if (text.isEmpty) {
+      setState(() {});
+      return;
+    }
+
+    for (int i = 0; i < _productsResponseList.length; i++) {
+      if (_productsResponseList[i].title.contains(text)) {
+        _searchProductsResultList.add(_productsResponseList[i]);
+      }
+    }
+
+    setState(() {});
+  }
+
+  // initstate
+  @override
+  void initState() {
+    getAllProducts();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.grey.shade100,
-        appBar: _buildAppBar(),
-        body: const SizedBox());
+      backgroundColor: Colors.grey.shade100,
+      appBar: _buildAppBar(),
+      body: isLoadingProducts
+          ? Expanded(
+              child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: 8,
+                padding: const EdgeInsets.only(
+                  bottom: 10.0,
+                  left: 18.0,
+                  right: 18.0,
+                  top: 12.0,
+                ),
+                itemBuilder: (context, index) {
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey.withOpacity(.1),
+                    highlightColor: Colors.white60,
+                    child: Container(
+                      height: 76,
+                      width: MediaQuery.of(context).size.width,
+                      margin: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(.7),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          : _searchProductsResultList.isEmpty &&
+                  _searchTextController.text.isNotEmpty
+              ? const Center(
+                  child: Text(
+                    "No Product Found",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal,
+                      height: 1.25,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: _searchProductsResultList.isEmpty
+                      ? productsResponseList.length
+                      : _searchProductsResultList.length,
+                  padding: const EdgeInsets.only(
+                    bottom: 10.0,
+                    left: 18.0,
+                    right: 18.0,
+                    top: 12.0,
+                  ),
+                  itemBuilder: (context, index) {
+                    ProductsModel product = _searchProductsResultList.isEmpty
+                        ? productsResponseList[index]
+                        : _searchProductsResultList[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductView(
+                              productDetails: product,
+                            ),
+                          ),
+                        ),
+                        child: Container(
+                          height: 76,
+                          padding: const EdgeInsets.only(
+                            left: 6.0,
+                            right: 12.0,
+                            top: 6.0,
+                            bottom: 6.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                height: 72,
+                                width: 72,
+                                child: Image.network(product.image),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  product.title,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                product.price.toString(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
   }
 
   AppBar _buildAppBar() {
@@ -80,9 +225,11 @@ class _SearchViewState extends State<SearchView> {
         textCapitalization: TextCapitalization.words,
         cursorColor: const Color(0xff1D1D1B),
         cursorWidth: 2,
-        controller: searchTextController,
+        controller: _searchTextController,
         autofocus: true,
-        onChanged: (_) {},
+        onChanged: (_) {
+          onSearchTextChanged(_searchTextController.text);
+        },
         style: const TextStyle(
           fontSize: 16,
           height: 1.4,
