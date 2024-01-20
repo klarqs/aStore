@@ -63,7 +63,7 @@ class _SearchViewState extends State<SearchView> {
   }
 
   onSearchTextChanged(String text) async {
-    _searchProductsResultList.clear();
+    searchProductsResultList.clear();
     if (text.isEmpty) {
       setState(() {});
       return;
@@ -71,7 +71,7 @@ class _SearchViewState extends State<SearchView> {
 
     for (int i = 0; i < _productsResponseList.length; i++) {
       if (_productsResponseList[i].title.contains(text)) {
-        _searchProductsResultList.add(_productsResponseList[i]);
+        searchProductsResultList.add(_productsResponseList[i]);
       }
     }
 
@@ -119,7 +119,7 @@ class _SearchViewState extends State<SearchView> {
                 },
               ),
             )
-          : _searchProductsResultList.isEmpty &&
+          : searchProductsResultList.isEmpty &&
                   _searchTextController.text.isNotEmpty
               ? const Center(
                   child: Text(
@@ -134,9 +134,9 @@ class _SearchViewState extends State<SearchView> {
               : ListView.builder(
                   physics: const BouncingScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: _searchProductsResultList.isEmpty
+                  itemCount: searchProductsResultList.isEmpty
                       ? productsResponseList.length
-                      : _searchProductsResultList.length,
+                      : searchProductsResultList.length,
                   padding: const EdgeInsets.only(
                     bottom: 10.0,
                     left: 18.0,
@@ -144,9 +144,9 @@ class _SearchViewState extends State<SearchView> {
                     top: 12.0,
                   ),
                   itemBuilder: (context, index) {
-                    ProductsModel product = _searchProductsResultList.isEmpty
+                    ProductsModel product = searchProductsResultList.isEmpty
                         ? productsResponseList[index]
-                        : _searchProductsResultList[index];
+                        : searchProductsResultList[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: InkWell(
