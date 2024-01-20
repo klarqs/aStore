@@ -21,7 +21,7 @@ class _SearchViewState extends State<SearchView> {
 
   bool isLoadingProducts = false;
 
-  List<ProductsModel> _searchProductsResultList = [];
+  List<ProductsModel> searchProductsResultList = [];
   List<ProductsModel> _productsResponseList = [];
   List<ProductsModel> get productsResponseList => _productsResponseList;
 
